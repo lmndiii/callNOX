@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="discord">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nox Space — Ultra Edition</title>
+    
+    <!-- SDK и зависимости -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Уникальные футуристические шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Orbitron:wght@500;900&family=Press+Start+2P&family=UnifrakturMaguntia&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        pixel: ['"Press Start 2P"', 'monospace'],
+                        gothic: ['"UnifrakturMaguntia"', 'serif'],
+                        cyber: ['"Orbitron"', 'sans-serif'],
+                        code: ['"Fira Code"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CSS-переменные для эффекта матового стекла и неонового свечения */
+        :root {
+            --neon-glow: 0 0 15px rgba(88, 101, 242, 0.4);
+            --neon-border: rgba(88, 101, 242, 0.25);
+        }
+
+        [data-theme="discord"] {
+            --bg-glass: rgba(30, 31, 34, 0.65);
+            --bg-panel: rgba(43, 45, 49, 0.75);
+            --bg-chat: rgba(49, 51, 56, 0.5);
+            --accent: #5865f2;
+            --accent-glow: rgba(88, 101, 242, 0.5);
+            --text-main: #f2f3f5;
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+        [data-theme="amethyst"] {
+            --bg-glass: rgba(18, 12, 31, 0.65);
+            --bg-panel: rgba(26, 18, 44, 0.75);
+            --bg-chat: rgba(36, 25, 61, 0.5);
+            --accent: #9d4edd;
+            --accent-glow: rgba(157, 78, 221, 0.5);
+            --text-main: #f3e8ff;
+            --glass-border: rgba(157, 78, 221, 0.15);
+        }
+        [data-theme="cyberpunk"] {
+            --bg-glass: rgba(10, 10, 12, 0.7);
+            --bg-panel: rgba(22, 22, 31, 0.8);
+            --bg-chat: rgba(34, 34, 51, 0.55);
+            --accent: #ff0055;
+            --accent-glow: rgba(255, 0, 85, 0.6);
+            --text-main: #00ffcc;
+            --glass-border: rgba(0, 255, 204, 0.2);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at center, #111216 0%, #050508 100%);
+            color: var(--text-main);
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Премиум стеклянные панели */
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Неоновые светящиеся кнопки */
+        .neon-btn {
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .neon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--accent-glow);
+            filter: brightness(1.1);
+        }
+        .neon-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Кастомные шрифты ников */
+        .font-style-default { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
+        .font-style-pixel { font-family: 'Press Start 2P', monospace; font-size: 8px !important; }
+        .font-style-gothic { font-family: 'UnifrakturMaguntia', serif; font-size: 18px !important; }
+        .font-style-cyber { font-family: 'Orbitron', sans-serif; letter-spacing: 1.5px; font-weight: 900; }
+        .font-style-code { font-family: 'Fira Code', monospace; font-weight: 700; }
+
+        /* Бесшовный плавный скролл */
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 99px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* Эффект пульсации для говорящего */
+        @keyframes speaking-glow {
+            0% { box-shadow: 0 0 0 0 var(--accent-glow); border-color: var(--accent); }
+            70% { box-shadow: 0 0 16px 8px rgba(0, 0, 0, 0); border-color: var(--accent); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); border-color: var(--accent); }
+        }
+        .user-speaking-ring {
+            animation: speaking-glow 1.4s infinite;
+            border: 3px solid var(--accent) !important;
+        }
+
+        /* Nitro Радужный Текст */
+        .nitro-gradient-text {
+            background: linear-gradient(124deg, #ff007f, #7f00ff, #00f0ff, #248046, #ff007f);
+            background-size: 600% 600%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 5s ease infinite;
+        }
+        @keyframes rainbow { 
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 3D-анимация звездного пространства на холсте */
+        #stars-space {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Эффект коллапса при сбросе базы */
+        .collapse-active {
+            animation: collapse-screen 1.5s forwards cubic-bezier(0.6, -0.28, 0.735, 0.045);
+        }
+        @keyframes collapse-screen {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0px); }
+            50% { transform: scale(0.5) rotate(10deg); opacity: 0.5; filter: blur(10px); }
+            100% { transform: scale(0) rotate(-45deg); opacity: 0; filter: blur(50px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- Кастомные звуковые оповещения -->
+    <div id="audio-cache" class="hidden"></div>
+
+    <!-- Системные уведомления -->
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass-panel border border-white/10 px-6 py-4 rounded-[20px] shadow-2xl flex items-center gap-3.5 text-xs font-bold opacity-0 translate-y-[-20px] pointer-events-none transition-all duration-500">
+        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
+        <span id="toast-text" class="text-white">Выполнено успешно</span>
+    </div>
+
+    <!-- ================= 1. ЭКРАН БЛОКИРОВКИ И АВТОРИЗАЦИИ (ULTRA GLASS) ================= -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+        <canvas id="stars-space"></canvas>
+        
+        <div id="auth-card" class="w-full max-w-[440px] glass-panel rounded-[32px] p-8 space-y-6 shadow-2xl relative z-10 transition-all duration-700 transform translate-y-0 opacity-100">
+            <!-- Футуристическое лого Nox Space -->
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#ff0055] via-[#5865f2] to-[#00ffcc] text-white text-4xl p-5 rounded-[26px] shadow-2xl animate-spin-slow">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-widest font-cyber text-white">NOX SPACE</h1>
+                <p class="text-[#949ba4] text-xs leading-relaxed">Покорите новые горизонты общения в защищенном децентрализованном пространстве.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider pl-1">Идентификатор космонавта</label>
+                    <input id="username-input" type="text" placeholder="alex_cyber" class="w-full px-4 py-4 bg-black/40 border border-white/5 rounded-2xl focus:border-[#5865f2] focus:ring-1 focus:ring-[#5865f2] outline-none text-xs text-[#f2f3f5] transition">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider pl-1">Секретный пароль доступа</label>
+                    <input id="password-input" type="password" placeholder="••••••••" class="w-full px-4 py-4 bg-black/40 border border-white/5 rounded-2xl focus:border-[#5865f2] focus:ring-1 focus:ring-[#5865f2] outline-none text-xs text-[#f2f3f5] transition">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-1">
+                <button onclick="authAction(true)" class="w-full py-4 neon-btn text-white font-bold rounded-2xl text-xs uppercase tracking-wider active:scale-95 transition-all">Зарегистрировать аккаунт</button>
+                <button onclick="authAction(false)" class="w-full py-4 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-2xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-white/5">Открыть портал</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. ОСНОВНОЙ ИНТЕРФЕЙС NOX SPACE ULTRA ================= -->
+    <div id="main-screen" class="hidden flex-grow flex h-screen overflow-hidden p-3 md:p-4 gap-3 bg-[#050508]">
+        
+        <!-- КОЛОНКА 1: Список Серверов (Premium Left Bar) -->
+        <div class="w-20 glass-panel rounded-[24px] flex flex-col items-center py-6 justify-between shrink-0">
+            <div class="flex flex-col items-center gap-4 w-full overflow-y-auto no-scrollbar" id="servers-sidebar">
+                <!-- Кнопка Личных сообщений (Home) -->
+                <div onclick="selectServer('dm')" class="w-12 h-12 bg-white/5 hover:bg-[#5865f2] text-[#dbdee1] hover:text-white rounded-[16px] hover:rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all duration-300" id="dm-server-btn">
+                    <i class="fa-solid fa-satellite"></i>
+                </div>
+                <hr class="w-8 border-t border-white/5">
+                
+                <div id="server-list-container" class="flex flex-col gap-3 items-center w-full"></div>
+
+                <div onclick="openCreateServerDialog()" class="w-12 h-12 bg-white/5 hover:bg-[#23a55a] text-[#23a55a] hover:text-white rounded-full hover:rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300" title="Добавить сервер">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center gap-4">
+                <div class="text-[9px] font-mono text-[#23a55a] font-bold" id="ping-label">0ms</div>
+                <div onclick="openSettings()" class="w-12 h-12 bg-cover bg-center border-2 border-white/10 rounded-full flex items-center justify-center font-bold text-sm cursor-pointer hover:scale-105 transition-all duration-300 shadow-lg" id="my-avatar">?</div>
+            </div>
+        </div>
+
+        <!-- КОЛОНКА 2: Каналы или Друзья (Средняя колонка) -->
+        <div id="sidebar-channels" class="w-full md:w-64 glass-panel rounded-[24px] flex flex-col overflow-hidden shrink-0">
+            <!-- Шапка средней панели -->
+            <div class="p-4 border-b border-white/5 flex items-center justify-between" id="sidebar-header">
+                <h2 class="font-extrabold text-xs text-white uppercase tracking-wider" id="sidebar-title">Личные сообщения</h2>
+                <button onclick="openAddContactDialog()" class="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs text-[#949ba4] hover:text-white transition-all"><i class="fa-solid fa-user-plus"></i></button>
+            </div>
+
+            <!-- Тело средней панели -->
+            <div class="flex-grow overflow-y-auto p-2.5 space-y-4 custom-scroll" id="sidebar-content"></div>
+
+            <!-- Голосовой статус подключения -->
+            <div id="voice-connection-status" class="hidden p-3 bg-black/40 border-t border-white/5 flex items-center justify-between m-2.5 rounded-xl">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <div class="min-w-0">
+                        <div class="text-[10px] font-bold text-emerald-400 uppercase">Голос подключен</div>
+                        <div class="text-[9px] text-[#949ba4] truncate" id="connected-voice-channel-name">#общий</div>
+                    </div>
+                </div>
+                <button onclick="disconnectFromVoice()" class="p-2 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition-all text-xs">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- КОЛОНКА 3: Окно общения (Правая премиум панель) -->
+        <div id="chat-panel" class="hidden md:flex flex-col flex-grow glass-panel rounded-[24px] h-full overflow-hidden relative">
+            
+            <!-- Обои чата (Бэкграунд) -->
+            <div id="chat-bg-layer" class="absolute inset-0 z-0 bg-cover bg-center opacity-10 pointer-events-none"></div>
+
+            <!-- Шапка чата -->
+            <div class="p-4 bg-transparent border-b border-white/5 flex items-center justify-between shrink-0 relative z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="backToSidebarOnMobile()" class="md:hidden p-2 text-[#949ba4] hover:text-white"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="w-10 h-10 bg-cover bg-center rounded-full flex items-center justify-center font-bold text-sm border border-white/10" id="chat-avatar">?</div>
+                    <div>
+                        <h3 class="font-bold text-sm text-[#f2f3f5]" id="chat-title">Выберите чат</h3>
+                        <p class="text-[10px] text-[#949ba4]" id="chat-status">Загрузка космических каналов...</p>
+                    </div>
+                </div>
+
+                <!-- Кнопки звонков -->
+                <div class="flex items-center gap-2" id="chat-header-actions">
+                    <button onclick="initiateCall(false)" class="w-9 h-9 bg-white/5 hover:bg-[#23a55a]/25 hover:text-[#23a55a] rounded-xl flex items-center justify-center text-sm transition-all" title="Аудиовызов"><i class="fa-solid fa-phone"></i></button>
+                    <button onclick="initiateCall(true)" class="w-9 h-9 bg-white/5 hover:bg-[#5865f2]/25 hover:text-[#5865f2] rounded-xl flex items-center justify-center text-sm transition-all" title="Видеовызов"><i class="fa-solid fa-video"></i></button>
+                    <label class="w-9 h-9 bg-white/5 hover:bg-[#f0b232]/25 hover:text-[#f0b232] rounded-xl flex items-center justify-center text-sm cursor-pointer transition-all" title="Поделиться файлом">
+                        <i class="fa-solid fa-paperclip"></i>
+                        <input id="file-uploader" type="file" class="hidden" onchange="sendP2PFile(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Стримы вызовов -->
+            <div id="call-panel" class="hidden bg-[#0d0d12]/80 p-4 border-b border-white/5 flex flex-col gap-3 min-h-[260px] relative z-10">
+                <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-h-[400px] overflow-y-auto custom-scroll"></div>
+                
+                <div class="flex justify-center items-center gap-3 bg-black/40 backdrop-blur px-4 py-2 rounded-2xl border border-white/5 max-w-max mx-auto">
+                    <button id="mic-toggle-btn" onclick="toggleLocalAudio()" class="w-10 h-10 bg-white/10 hover:bg-red-600 rounded-full flex items-center justify-center text-xs transition-all"><i class="fa-solid fa-microphone"></i></button>
+                    <button id="video-toggle-btn" onclick="toggleLocalVideo()" class="w-10 h-10 bg-white/10 hover:bg-red-600 rounded-full flex items-center justify-center text-xs transition-all"><i class="fa-solid fa-video"></i></button>
+                    <button onclick="closeActiveCall()" class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-xs text-white transition-all"><i class="fa-solid fa-phone-slash"></i></button>
+                </div>
+            </div>
+
+            <!-- История Сообщений -->
+            <div id="chat-history" class="flex-grow overflow-y-auto p-6 space-y-4 custom-scroll relative z-10">
+                <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[#949ba4]">
+                    <i class="fa-solid fa-satellite-dish text-5xl mb-3 opacity-20"></i>
+                    <p class="text-xs">Добро пожаловать в Nox Space Ultra! Выберите чат в списке слева.</p>
+                </div>
+            </div>
+
+            <!-- Прогресс передачи файлов -->
+            <div id="progress-container" class="hidden px-6 py-2 bg-black/40 border-t border-white/5 text-[10px] flex items-center justify-between gap-4 relative z-10">
+                <span class="truncate max-w-[40%] text-[#949ba4]" id="progress-filename">file.bin</span>
+                <div class="flex-grow bg-white/5 h-1.5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="theme-btn h-full w-[0%] transition-all"></div>
+                </div>
+                <span id="progress-percent" class="font-mono text-[#949ba4]">0%</span>
+            </div>
+
+            <!-- Ввод сообщения -->
+            <div class="p-4 bg-transparent border-t border-white/5 flex items-center gap-2.5 shrink-0 relative z-10" id="chat-input-bar">
+                <button id="voice-record-btn" onclick="toggleVoiceRecording()" class="w-11 h-11 bg-white/5 hover:bg-red-600/25 hover:text-red-400 text-[#949ba4] rounded-xl flex items-center justify-center text-sm active:scale-95 transition-all" title="Записать голосовое">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+                <input id="message-input" type="text" placeholder="Написать сообщение..." class="flex-grow py-3.5 px-4 bg-white/5 border border-white/5 rounded-xl outline-none text-xs text-white focus:ring-1 focus:ring-[#5865f2] transition-all" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" class="w-11 h-11 neon-btn text-white rounded-xl flex items-center justify-center text-sm active:scale-95 transition-all"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= МОДАЛЬНЫЕ ОКНА (ULTRA GLASS) ================= -->
+
+    <!-- НАСТРОЙКИ ПРОФИЛЯ + GIF PICKER + СЕКРЕТНЫЙ ТЕРМИНАЛ -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-[#2b2d31]/95 border border-white/10 p-6 rounded-[28px] max-w-md w-full space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            <button onclick="closeSettings()" class="absolute top-4 right-4 text-[#949ba4] hover:text-white transition-all"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="flex items-center gap-2.5 border-b border-white/5 pb-3">
+                <h3 class="text-base font-extrabold uppercase tracking-wider text-white">Параметры профиля</h3>
+                <span id="nitro-badge" class="hidden text-[9px] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black px-2 py-0.5 rounded-full uppercase animate-pulse">SPACE NITRO ACTIVE</span>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Кастомный баннер профиля (Nitro-опция) -->
+                <div id="profile-banner-wrapper" class="relative h-24 rounded-2xl overflow-hidden bg-cover bg-center border border-white/5 flex items-end p-3 opacity-50" style="background-image: url('https://i.pinimg.com/originals/e5/23/0d/e5230dbd22df67bdcf6cb405c07cfc7a.gif');">
+                    <span class="text-[9px] bg-black/70 px-2 py-0.5 rounded-lg text-white font-semibold">Анимированный баннер</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Никнейм</label>
+                        <input id="settings-nickname" type="text" class="w-full px-3 py-2 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Кастомный Статус</label>
+                        <input id="settings-custom-status" type="text" placeholder="Кодит на HTML..." class="w-full px-3 py-2 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div id="font-style-wrapper" class="opacity-50 pointer-events-none transition-all">
+                        <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Шрифт (Нужен Nitro)</label>
+                        <select id="settings-font-style" class="w-full px-3 py-2 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+                            <option value="default">Классический Nox</option>
+                            <option value="pixel">8-Бит Ретро (Pixel)</option>
+                            <option value="gothic">Готическая древность</option>
+                            <option value="cyber">Киберпанк 2077</option>
+                            <option value="code">Хакерский (Fira Code)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Сетевой статус</label>
+                        <select id="settings-user-status" class="w-full px-3 py-2 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+                            <option value="online">В сети</option>
+                            <option value="idle">Неактивен</option>
+                            <option value="dnd">Не беспокоить</option>
+                            <option value="invisible">Невидимый</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Консоль Активации / Деструктуризации (Секретная панель) -->
+                <div class="p-4 bg-black/40 border border-white/5 rounded-2xl space-y-2">
+                    <label class="block text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Секретный терминал Space</label>
+                    <div class="flex gap-2">
+                        <input id="nitro-code-input" type="text" placeholder="Введите код активации / судного дня..." class="flex-grow px-3 py-2 bg-black/30 rounded-lg text-xs outline-none text-white border border-white/5 font-mono">
+                        <button onclick="executeTerminalCommand()" class="px-4 py-2 bg-[#5865f2] hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all">Ввод</button>
+                    </div>
+                </div>
+
+                <!-- Селектор обоев для чата -->
+                <div id="wallpaper-wrapper" class="opacity-50 pointer-events-none transition-all">
+                    <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-2">Обои для чата</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setChatBackground('https://i.pinimg.com/originals/a0/0b/7d/a00b7df0f0ef6c694605175947517a9c.gif')" class="py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-semibold text-white">Cyber Eye</button>
+                        <button onclick="setChatBackground('https://i.pinimg.com/originals/53/7d/bc/537dbce6a07cf6bc39a14704efcd6992.gif')" class="py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-semibold text-white">Synth Grid</button>
+                        <button onclick="setChatBackground('https://i.pinimg.com/originals/f3/df/64/f3df649bf55d9b5bc7f4ff699a9a0ebf.gif')" class="py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-semibold text-white">Neon Waves</button>
+                    </div>
+                </div>
+
+                <!-- Библиотека GIF-аватарок -->
+                <div id="gif-library-wrapper" class="opacity-50 pointer-events-none transition-all">
+                    <label class="block text-[10px] font-bold text-[#f0b232] uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Анимированные GIF-аватары (Нужен Nitro)
+                    </label>
+                    <div class="grid grid-cols-4 gap-2.5 max-h-36 overflow-y-auto p-2 bg-black/30 rounded-xl border border-white/5 custom-scroll" id="gif-picker-grid"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveProfileSettings()" class="flex-grow py-3 bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">Сохранить</button>
+                <button onclick="signOutUser()" class="px-4 py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl active:scale-95 transition-all"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ СЕРВЕРА -->
+    <div id="create-server-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2b2d31]/95 border border-white/10 p-6 rounded-[28px] max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-base font-extrabold uppercase tracking-wider text-white">Создать сервер</h3>
+            <div>
+                <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Название сервера</label>
+                <input id="server-name-input" type="text" placeholder="Игровой клан" class="w-full px-3 py-2.5 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+            </div>
+            <div class="flex justify-end gap-2 pt-2 text-xs font-bold">
+                <button onclick="closeCreateServerDialog()" class="py-2.5 px-4 bg-white/5 rounded-xl">Отмена</button>
+                <button onclick="createServer()" class="py-2.5 px-4 bg-[#5865f2] text-white rounded-xl">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ КАНАЛА -->
+    <div id="create-channel-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2b2d31]/95 border border-white/10 p-6 rounded-[28px] max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-base font-extrabold uppercase tracking-wider text-white">Создать канал</h3>
+            <div>
+                <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Название канала</label>
+                <input id="channel-name-input" type="text" placeholder="флудилка" class="w-full px-3 py-2.5 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-[#949ba4] uppercase tracking-wider mb-1.5">Тип канала</label>
+                <select id="channel-type-select" class="w-full px-3 py-2.5 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white">
+                    <option value="text">Текстовый канал</option>
+                    <option value="voice">Голосовой канал (Войс-чат)</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 text-xs font-bold">
+                <button onclick="closeCreateChannelDialog()" class="py-2.5 px-4 bg-white/5 rounded-xl">Отмена</button>
+                <button onclick="createChannel()" class="py-2.5 px-4 bg-[#5865f2] text-white rounded-xl">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ВХОДЯЩИЙ ЗВОНОК -->
+    <div id="incoming-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2b2d31]/95 border border-white/10 p-6 rounded-3xl max-w-xs w-full text-center space-y-6 shadow-2xl">
+            <div class="relative inline-block mx-auto">
+                <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 text-[#23a55a] rounded-full flex items-center justify-center text-3xl animate-bounce">
+                    <i class="fa-solid fa-phone-volume"></i>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold" id="caller-username-label">@user</h4>
+                <p class="text-[#949ba4] text-xs mt-1" id="caller-media-label">Входящий вызов...</p>
+            </div>
+            <div class="flex justify-center gap-3">
+                <button onclick="answerCall(true)" class="py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-phone"></i> Принять
+                </button>
+                <button onclick="answerCall(false)" class="py-3 px-5 bg-red-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-xmark"></i> Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: Добавление друга -->
+    <div id="add-contact-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur z-50 flex items-center justify-center p-4">
+        <div class="bg-[#2b2d31]/95 border border-white/10 p-6 rounded-[28px] max-w-xs w-full space-y-4 shadow-2xl">
+            <h3 class="text-sm font-bold uppercase tracking-wide text-white">Добавить друга</h3>
+            <p class="text-[10px] text-[#949ba4]">Добавьте пользователя в список контактов по его логину.</p>
+            <input id="add-contact-username" type="text" placeholder="alex_space" class="w-full py-2.5 px-3 bg-black/30 border border-white/5 rounded-xl text-xs outline-none text-white focus:ring-1 focus:ring-[#5865f2]">
+            <div class="flex justify-end gap-2 pt-1 text-xs">
+                <button onclick="closeAddContactDialog()" class="py-2.5 px-3 bg-white/5 text-gray-400 rounded-xl">Отмена</button>
+                <button onclick="addContact()" class="py-2.5 px-4 bg-[#5865f2] text-white rounded-xl font-semibold">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXsCK1r7pxX_B-8pxwE_NfN55oQEvMfCM",
+            authDomain: "webcall-44e9e.firebaseapp.com",
+            projectId: "webcall-44e9e",
+            storageBucket: "webcall-44e9e.firebasestorage.app",
+            messagingSenderId: "730823632799",
+            appId: "1:730823632799:web:c964c0fce688ff7e2abfaa",
+            measurementId: "G-HST7R21W3W"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const appId = 'webcall-44e9e';
+        const usersPath = `artifacts/${appId}/public/data/users`;
+        const chatsPath = `artifacts/${appId}/public/data/chats`;
+        const serversPath = `artifacts/${appId}/public/data/servers`;
+
+        // Безопасные и высокоскоростные GIF-аватарки, доступные по всему миру без VPN
+        const premiumGifs = [
+            "https://i.pinimg.com/originals/a0/0b/7d/a00b7df0f0ef6c694605175947517a9c.gif", 
+            "https://i.pinimg.com/originals/53/7d/bc/537dbce6a07cf6bc39a14704efcd6992.gif", 
+            "https://i.pinimg.com/originals/f3/df/64/f3df649bf55d9b5bc7f4ff699a9a0ebf.gif", 
+            "https://i.pinimg.com/originals/e5/23/0d/e5230dbd22df67bdcf6cb405c07cfc7a.gif", 
+            "https://i.pinimg.com/originals/93/bf/7d/93bf7d86f9f59f6be4e3f4df914f6bdf.gif",
+            "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZtNHptMHdqZW0zNHY4aGR0dWt0cnJ5bnhrYzFpa2Z3dzJmOGQ3eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3q2zVr6cu95nF6O4/giphy.gif",
+            "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzh4dHpxeWFibHhhd202eWN2bzNpNXZwdXUxa3h6MmJ5Y2l3dnkzdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l41YcGT5sh6p79cbe/giphy.gif",
+            "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMzlmbXpyZmd2OTN1OHI5ZHhxcmh0N2R0NWh1azdrZ2Iwa3h1ajRlayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT9Igg36E423b4Uf3q/giphy.gif"
+        ];
+
+        let me = null;
+        let selectedUser = null;
+        let currentServer = 'dm';
+        let currentChannel = null;
+        let peer = null;
+        let myStream = null;
+        let calls = {};
+        let activeDataChannels = {};
+        let incomingCall = null;
+        
+        let audioMuted = false;
+        let videoMuted = false;
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let selectedAvatar = premiumGifs[0];
+
+        // Звуки на чистом Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSoundTone(freq, duration, type = 'sine') {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { console.warn(e); }
+        }
+
+        // --- ГЕНЕРАЦИЯ ИНТЕРАКТИВНОГО 3D КОСМОСА ---
+        function initStarsCanvas() {
+            const canvas = document.getElementById('stars-space');
+            const ctx = canvas.getContext('2d');
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+
+            const stars = [];
+            for (let i = 0; i < 110; i++) {
+                stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 2 + 0.5,
+                    vx: Math.random() * 0.4 - 0.2,
+                    vy: Math.random() * 0.4 - 0.2
+                });
+            }
+
+            function frame() {
+                ctx.fillStyle = 'rgba(5, 5, 8, 0.15)';
+                ctx.fillRect(0, 0, w, h);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                stars.forEach(s => {
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    s.x += s.vx;
+                    s.y += s.vy;
+                    if (s.x < 0 || s.x > w) s.vx *= -1;
+                    if (s.y < 0 || s.y > h) s.vy *= -1;
+                });
+                requestAnimationFrame(frame);
+            }
+            frame();
+
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+        }
+        initStarsCanvas();
+
+        function triggerNotification(text, success = true) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').textContent = text;
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => { 
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // --- БЫСТРЫЙ ВХОД И РЕГИСТРАЦИЯ ---
+        async function authAction(isRegister) {
+            const username = document.getElementById('username-input').value.trim().toLowerCase();
+            const pass = document.getElementById('password-input').value;
+
+            if (!username || pass.length < 6) {
+                triggerNotification("Логин или ключ доступа слишком короткие!", false);
+                return;
+            }
+
+            const mockEmail = `${username}@noxspace.internal`;
+
+            try {
+                if (isRegister) {
+                    const check = await db.collection(usersPath).doc(username).get();
+                    if (check.exists) {
+                        triggerNotification("Космический логин уже занят!", false);
+                        return;
+                    }
+
+                    const credentials = await auth.createUserWithEmailAndPassword(mockEmail, pass);
+                    const user = credentials.user;
+
+                    const userProfile = {
+                        uid: user.uid,
+                        username: username,
+                        nickname: username,
+                        avatar: premiumGifs[0],
+                        customStatus: "Заряжен Nitro 🌌",
+                        fontStyle: "default",
+                        isNitro: false,
+                        chatBg: '',
+                        peerId: '',
+                        status: 'online',
+                        contacts: []
+                    };
+
+                    await db.collection(usersPath).doc(username).set(userProfile);
+                    triggerNotification("Добро пожаловать в Nox Space!");
+                    proceedToApp(userProfile);
+                } else {
+                    const credentials = await auth.signInWithEmailAndPassword(mockEmail, pass);
+                    const snap = await db.collection(usersPath).where('uid', '==', credentials.user.uid).get();
+                    if (!snap.empty) {
+                        triggerNotification("Связь успешно синхронизирована!");
+                        proceedToApp(snap.docs[0].data());
+                    }
+                }
+            } catch (e) {
+                triggerNotification("Ошибка доступа: " + e.message, false);
+            }
+        }
+
+        function proceedToApp(userProfile) {
+            me = userProfile;
+            
+            // Красивая плавная анимация входа
+            const authCard = document.getElementById('auth-card');
+            authCard.style.transform = 'translateY(50px) scale(0.9)';
+            authCard.style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                
+                updateProfileUI();
+                db.collection(usersPath).doc(me.username).update({ status: 'online' });
+                
+                setupPeer();
+                trackServersAndChannels();
+                selectServer('dm');
+                generateGifPicker();
+
+                if (me.isNitro) {
+                    unlockNitroBenefits();
+                }
+                if (me.chatBg) {
+                    setChatBackground(me.chatBg, true);
+                }
+            }, 600);
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user && !me) {
+                const snap = await db.collection(usersPath).where('uid', '==', user.uid).get();
+                if (!snap.empty) {
+                    proceedToApp(snap.docs[0].data());
+                }
+            } else if (!user) {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('main-screen').classList.add('hidden');
+            }
+        });
+
+        function updateProfileUI() {
+            const avatarDiv = document.getElementById('my-avatar');
+            avatarDiv.textContent = '';
+            avatarDiv.style.backgroundImage = `url('${me.avatar || premiumGifs[0]}')`;
+            avatarDiv.title = me.nickname || me.username;
+        }
+
+        async function signOutUser() {
+            if (me) {
+                await db.collection(usersPath).doc(me.username).update({ status: 'offline', peerId: '' });
+            }
+            if (peer) peer.destroy();
+            await auth.signOut();
+            window.location.reload();
+        }
+
+        // --- PEERJS ---
+        function setupPeer() {
+            peer = new Peer(null, {
+                debug: 1,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            peer.on('open', (id) => {
+                db.collection(usersPath).doc(me.username).update({ peerId: id });
+            });
+
+            peer.on('call', (call) => {
+                incomingCall = call;
+                playSoundTone(520, 0.4);
+                db.collection(usersPath).where('peerId', '==', call.peer).get().then(snap => {
+                    let callerName = "Аноним";
+                    if (!snap.empty) callerName = snap.docs[0].data().nickname || snap.docs[0].data().username;
+
+                    document.getElementById('caller-username-label').textContent = callerName;
+                    document.getElementById('caller-media-label').textContent = call.options.metadata?.video ? "видеозвонок" : "голосовой вызов";
+                    document.getElementById('incoming-modal').classList.remove('hidden');
+                });
+            });
+
+            peer.on('connection', (conn) => {
+                registerP2PDataChannel(conn);
+            });
+        }
+
+        // --- ДИСПЕТЧЕР ДИСКОРД КЛИЕНТА ---
+        function selectServer(serverId) {
+            currentServer = serverId;
+            currentChannel = null;
+            selectedUser = null;
+
+            document.getElementById('dm-server-btn').className = `w-12 h-12 flex items-center justify-center rounded-[18px] hover:rounded-xl transition-all duration-300 cursor-pointer ${serverId === 'dm' ? 'bg-[#5865f2] text-white rounded-[14px]' : 'bg-white/5 text-[#dbdee1] hover:bg-[#5865f2] hover:text-white'}`;
+            
+            const serverItems = document.querySelectorAll('.server-btn-item');
+            serverItems.forEach(item => {
+                const sId = item.getAttribute('data-id');
+                item.className = `w-12 h-12 server-btn-item flex items-center justify-center text-white font-bold cursor-pointer rounded-[18px] hover:rounded-xl transition-all duration-300 ${sId === serverId ? 'bg-[#5865f2] rounded-[14px]' : 'bg-white/5'}`;
+            });
+
+            const sidebarTitle = document.getElementById('sidebar-title');
+            const sidebarAddBtn = document.getElementById('sidebar-add-btn');
+
+            if (serverId === 'dm') {
+                sidebarTitle.textContent = "Личные сообщения";
+                sidebarAddBtn.classList.remove('hidden');
+                renderDMsList();
+                
+                document.getElementById('chat-panel').classList.add('hidden', 'md:flex');
+                document.getElementById('chat-history').innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[#949ba4]">
+                        <i class="fa-solid fa-cloud-moon text-6xl mb-3 text-white/5 animate-pulse"></i>
+                        <p class="text-xs">Начните невероятное общение, выбрав друга!</p>
+                    </div>
+                `;
+            } else {
+                sidebarAddBtn.classList.add('hidden');
+                db.collection(serversPath).doc(serverId).get().then(doc => {
+                    if (doc.exists) {
+                        sidebarTitle.textContent = doc.data().name;
+                        renderChannelsList(serverId);
+                    }
+                });
+            }
+        }
+
+        function trackServersAndChannels() {
+            db.collection(serversPath).onSnapshot((snap) => {
+                const container = document.getElementById('server-list-container');
+                container.innerHTML = '';
+
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    const initials = s.name.substring(0, 2).toUpperCase();
+
+                    const item = document.createElement('div');
+                    item.className = "w-12 h-12 server-btn-item bg-white/5 rounded-[18px] hover:rounded-xl flex items-center justify-center text-white font-bold cursor-pointer transition-all duration-300";
+                    item.setAttribute('data-id', s.id);
+                    item.textContent = initials;
+                    item.onclick = () => selectServer(s.id);
+
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        function renderDMsList() {
+            const container = document.getElementById('sidebar-content');
+            container.innerHTML = '<div class="text-center text-[#949ba4] text-[10px] py-4">Синхронизация...</div>';
+
+            db.collection(usersPath).onSnapshot((snap) => {
+                if (currentServer !== 'dm') return;
+                container.innerHTML = '';
+
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    if (u.uid === me.uid) return;
+
+                    const isOnline = u.status === 'online';
+                    const isDnd = u.status === 'dnd';
+                    const isIdle = u.status === 'idle';
+                    
+                    let statusColor = 'bg-gray-500';
+                    if (isOnline) statusColor = 'bg-[#23a55a]';
+                    if (isDnd) statusColor = 'bg-red-500';
+                    if (isIdle) statusColor = 'bg-[#f0b232]';
+
+                    const item = document.createElement('div');
+                    item.className = "flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl cursor-pointer active:scale-[0.98] transition-all";
+                    item.onclick = () => openPersonalChat(u);
+
+                    const isUserPremium = u.isNitro;
+
+                    item.innerHTML = `
+                        <div class="relative shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-cover bg-center shrink-0 border border-white/10" style="background-image: url('${u.avatar || premiumGifs[0]}')"></div>
+                            <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#2b2d31] ${statusColor}"></span>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="font-bold text-xs truncate flex items-center gap-1.5 ${isUserPremium ? 'nitro-gradient-text' : 'text-[#f2f3f5]'} font-style-${u.fontStyle || 'default'}">
+                                ${u.nickname || u.username}
+                                ${isUserPremium ? '<i class="fa-solid fa-gem text-[9px]"></i>' : ''}
+                            </div>
+                            <div class="text-[9px] text-[#949ba4] truncate">${u.customStatus || `@${u.username}`}</div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        function renderChannelsList(serverId) {
+            const container = document.getElementById('sidebar-content');
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between px-2 mb-1.5">
+                            <span class="text-[9px] font-bold text-[#949ba4] uppercase tracking-wider">Каналы</span>
+                            <button onclick="openCreateChannelDialog()" class="text-[#949ba4] hover:text-white text-xs"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div class="space-y-0.5" id="channels-inner-list"></div>
+                    </div>
+                </div>
+            `;
+
+            db.collection(serversPath).doc(serverId).collection('channels').onSnapshot((snap) => {
+                if (currentServer !== serverId) return;
+                const inner = document.getElementById('channels-inner-list');
+                inner.innerHTML = '';
+
+                snap.forEach(doc => {
+                    const c = doc.data();
+                    const isText = c.type === 'text';
+
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between p-2 hover:bg-[#35373c]/50 rounded-lg cursor-pointer transition text-[#949ba4] hover:text-[#dbdee1]";
+                    item.onclick = () => selectChannel(c);
+
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-gray-500 font-bold text-sm">${isText ? '#' : '<i class="fa-solid fa-volume-high text-[10px]"></i>'}</span>
+                            <span class="text-xs font-semibold truncate">${c.name}</span>
+                        </div>
+                    `;
+                    inner.appendChild(item);
+                });
+            });
+        }
+
+        // --- СОЗДАНИЕ СЕРВЕРОВ ---
+        function openCreateServerDialog() { document.getElementById('create-server-modal').classList.remove('hidden'); }
+        function closeCreateServerDialog() { document.getElementById('create-server-modal').classList.add('hidden'); }
+        
+        async function createServer() {
+            const name = document.getElementById('server-name-input').value.trim();
+            if (!name) return;
+
+            const newServerRef = db.collection(serversPath).doc();
+            await newServerRef.set({
+                id: newServerRef.id,
+                name: name,
+                ownerId: me.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await newServerRef.collection('channels').add({
+                name: 'общий',
+                type: 'text',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            closeCreateServerDialog();
+            document.getElementById('server-name-input').value = '';
+            triggerNotification("Сервер запущен!");
+        }
+
+        function openCreateChannelDialog() { document.getElementById('create-channel-modal').classList.remove('hidden'); }
+        function closeCreateChannelDialog() { document.getElementById('create-channel-modal').classList.add('hidden'); }
+
+        async function createChannel() {
+            const name = document.getElementById('channel-name-input').value.trim().toLowerCase().replace(/\s+/g, '-');
+            const type = document.getElementById('channel-type-select').value;
+            if (!name || currentServer === 'dm') return;
+
+            await db.collection(serversPath).doc(currentServer).collection('channels').add({
+                name: name,
+                type: type,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            closeCreateChannelDialog();
+            document.getElementById('channel-name-input').value = '';
+            triggerNotification("Канал создан!");
+        }
+
+        function selectChannel(channel) {
+            currentChannel = channel;
+            selectedUser = null;
+
+            document.getElementById('sidebar-channels').classList.add('hidden', 'md:flex');
+            document.getElementById('chat-panel').classList.remove('hidden');
+            document.getElementById('chat-panel').classList.add('flex');
+
+            document.getElementById('chat-avatar').textContent = channel.type === 'text' ? "#" : "🔊";
+            document.getElementById('chat-title').textContent = channel.name;
+            document.getElementById('chat-status').textContent = channel.type === 'text' ? 'Текстовый канал' : 'Голосовой чат';
+
+            const actions = document.getElementById('chat-header-actions');
+
+            if (channel.type === 'text') {
+                actions.classList.add('hidden');
+                document.getElementById('chat-history').innerHTML = '';
+                loadServerChannelHistory();
+            } else {
+                actions.classList.add('hidden');
+                document.getElementById('chat-history').innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[#949ba4]">
+                        <i class="fa-solid fa-microphone-lines text-5xl mb-3 text-[#5865f2] animate-pulse"></i>
+                        <h4 class="text-white text-sm font-bold">Вы подключились к каналу связи</h4>
+                        <button onclick="disconnectFromVoice()" class="mt-4 px-4 py-2 bg-red-650 text-white font-bold text-xs rounded-xl transition-all">Отключиться</button>
+                    </div>
+                `;
+                connectToVoiceChannel(channel);
+            }
+        }
+
+        async function connectToVoiceChannel(channel) {
+            document.getElementById('voice-connection-status').classList.remove('hidden');
+            document.getElementById('connected-voice-channel-name').textContent = `#${channel.name}`;
+
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const roomPath = `artifacts/${appId}/public/data/voice_${channel.name}`;
+                
+                await db.collection(roomPath).doc(me.uid).set({
+                    uid: me.uid,
+                    username: me.username,
+                    peerId: peer.id
+                });
+
+                db.collection(roomPath).onSnapshot((snap) => {
+                    snap.forEach(doc => {
+                        const user = doc.data();
+                        if (user.uid !== me.uid && user.peerId && !calls[user.peerId]) {
+                            const call = peer.call(user.peerId, myStream);
+                            calls[user.peerId] = call;
+                            call.on('stream', (remoteStream) => {
+                                handleRemoteVoiceStream(user.peerId, remoteStream);
+                            });
+                        }
+                    });
+                });
+            } catch (e) {
+                triggerNotification("Микрофон заблокирован!", false);
+            }
+        }
+
+        function handleRemoteVoiceStream(id, stream) {
+            let audio = document.getElementById(`audio-${id}`);
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = `audio-${id}`;
+                audio.autoplay = true;
+                document.body.appendChild(audio);
+            }
+            audio.srcObject = stream;
+        }
+
+        async function disconnectFromVoice() {
+            if (currentChannel && currentChannel.type === 'voice') {
+                const roomPath = `artifacts/${appId}/public/data/voice_${currentChannel.name}`;
+                await db.collection(roomPath).doc(me.uid).delete();
+            }
+
+            Object.values(calls).forEach(c => c.close());
+            calls = {};
+
+            if (myStream) {
+                myStream.getTracks().forEach(t => t.stop());
+                myStream = null;
+            }
+
+            document.getElementById('voice-connection-status').classList.add('hidden');
+            triggerNotification("Связь отключена.");
+            document.getElementById('chat-history').innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center p-6 text-[#949ba4]"><p class="text-xs">Вы вышли из беседы.</p></div>`;
+        }
+
+        function backToSidebarOnMobile() {
+            document.getElementById('chat-panel').classList.add('hidden');
+            document.getElementById('chat-panel').classList.remove('flex');
+            document.getElementById('sidebar-channels').classList.remove('hidden');
+            selectedUser = null;
+            currentChannel = null;
+        }
+
+        function loadServerChannelHistory() {
+            if (!currentChannel || currentServer === 'dm') return;
+            const historyPath = `artifacts/${appId}/public/data/server_chats_${currentServer}_${currentChannel.name}`;
+
+            db.collection(historyPath)
+                .onSnapshot((snap) => {
+                    const container = document.getElementById('chat-history');
+                    container.innerHTML = '';
+                    
+                    let msgs = [];
+                    snap.forEach(doc => msgs.push(doc.data()));
+                    msgs.sort((a,b) => (a.time?.seconds || 0) - (b.time?.seconds || 0));
+
+                    msgs.forEach(m => {
+                        const isMe = m.senderId === me.uid;
+                        renderBubble(m.senderName, m.text, isMe, m.isAudio, m.fontStyle, m.msgId);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                });
+        }
+
+        // --- ГОЛОСОВЫЕ СООБЩЕНИЯ ---
+        async function toggleVoiceRecording() {
+            const btn = document.getElementById('voice-record-btn');
+
+            if (!isRecording) {
+                try {
+                    audioChunks = [];
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    
+                    mediaRecorder.ondataavailable = (event) => { audioChunks.push(event.data); };
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = async () => {
+                            sendVoiceMessage(reader.result);
+                        };
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.className = "w-11 h-11 bg-red-600 text-white rounded-xl flex items-center justify-center text-sm animate-pulse transition";
+                    triggerNotification("Запись вашего сообщения...");
+                } catch (e) {
+                    triggerNotification("Ошибка захвата микрофона!", false);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.className = "w-11 h-11 bg-white/5 hover:bg-red-600/20 text-[#949ba4] rounded-xl flex items-center justify-center text-sm transition";
+            }
+        }
+
+        async function sendVoiceMessage(audioData) {
+            const playerHTML = `<audio controls src="${audioData}" class="mt-1.5 w-48 h-8 rounded-lg outline-none bg-black/40"></audio>`;
+            
+            if (selectedUser) {
+                if (selectedUser.peerId && activeDataChannels[selectedUser.peerId]) {
+                    activeDataChannels[selectedUser.peerId].send({ type: 'text', sender: me.nickname || me.username, text: playerHTML, fontStyle: me.fontStyle });
+                }
+                const roomId = [me.uid, selectedUser.uid].sort().join('_');
+                await db.collection(chatsPath).add({
+                    roomId,
+                    senderId: me.uid,
+                    senderName: me.nickname || me.username,
+                    text: playerHTML,
+                    isAudio: true,
+                    fontStyle: me.fontStyle || 'default',
+                    time: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else if (currentChannel && currentChannel.type === 'text') {
+                const historyPath = `artifacts/${appId}/public/data/server_chats_${currentServer}_${currentChannel.name}`;
+                await db.collection(historyPath).add({
+                    senderId: me.uid,
+                    senderName: me.nickname || me.username,
+                    text: playerHTML,
+                    isAudio: true,
+                    fontStyle: me.fontStyle || 'default',
+                    time: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            triggerNotification("Голосовое отправлено!");
+        }
+
+        // --- СООБЩЕНИЯ И ЭМОДЗИ РЕАКЦИИ ---
+        function sendChatMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+
+            if (selectedUser) {
+                if (selectedUser.peerId && activeDataChannels[selectedUser.peerId]) {
+                    activeDataChannels[selectedUser.peerId].send({ type: 'text', sender: me.nickname || me.username, text, fontStyle: me.fontStyle, msgId: msgId });
+                }
+                const roomId = [me.uid, selectedUser.uid].sort().join('_');
+                db.collection(chatsPath).doc(msgId).set({
+                    roomId,
+                    msgId,
+                    senderId: me.uid,
+                    senderName: me.nickname || me.username,
+                    text,
+                    fontStyle: me.fontStyle || 'default',
+                    reactions: {},
+                    time: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else if (currentChannel && currentChannel.type === 'text') {
+                const historyPath = `artifacts/${appId}/public/data/server_chats_${currentServer}_${currentChannel.name}`;
+                db.collection(historyPath).doc(msgId).set({
+                    senderId: me.uid,
+                    msgId,
+                    senderName: me.nickname || me.username,
+                    text,
+                    fontStyle: me.fontStyle || 'default',
+                    reactions: {},
+                    time: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            input.value = '';
+        }
+
+        function renderBubble(sender, text, isMe, isAudio = false, fontStyle = 'default', msgId = null) {
+            const container = document.getElementById('chat-history');
+            const wrap = document.createElement('div');
+            wrap.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full group relative mb-2`;
+
+            wrap.innerHTML = `
+                <div class="max-w-[75%] space-y-0.5">
+                    <span class="text-[9px] text-[#949ba4] font-bold px-1 font-style-${fontStyle}">${isMe ? 'Вы' : sender}</span>
+                    <div class="px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-[#5865f2] text-white rounded-tr-none' : 'bg-black/30 text-gray-100 rounded-tl-none border border-white/5'} break-words">
+                        ${isAudio ? text : text.replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[t] || t))}
+                    </div>
+                    
+                    ${msgId ? `
+                    <div class="opacity-0 group-hover:opacity-100 absolute ${isMe ? '-left-16' : '-right-16'} top-1 flex bg-[#1e1f22] border border-white/10 px-1 py-0.5 rounded-xl gap-1 transition-opacity z-10">
+                        <button onclick="addReaction('${msgId}', '🔥')" class="hover:scale-125 transition">🔥</button>
+                        <button onclick="addReaction('${msgId}', '😂')" class="hover:scale-125 transition">😂</button>
+                        <button onclick="addReaction('${msgId}', '❤️')" class="hover:scale-125 transition">❤️</button>
+                    </div>
+                    ` : ''}
+
+                    <div class="flex gap-1 mt-1 text-[10px]" id="reactions-${msgId}"></div>
+                </div>
+            `;
+            container.appendChild(wrap);
+            container.scrollTop = container.scrollHeight;
+
+            if (msgId) {
+                listenToReactions(msgId);
+            }
+        }
+
+        async function addReaction(msgId, emoji) {
+            const dbRef = selectedUser ? db.collection(chatsPath).doc(msgId) : db.collection(`artifacts/${appId}/public/data/server_chats_${currentServer}_${currentChannel.name}`).doc(msgId);
+            const doc = await dbRef.get();
+            if (doc.exists) {
+                const reactions = doc.data().reactions || {};
+                reactions[emoji] = (reactions[emoji] || 0) + 1;
+                await dbRef.update({ reactions });
+            }
+        }
+
+        function listenToReactions(msgId) {
+            const dbRef = selectedUser ? db.collection(chatsPath).doc(msgId) : db.collection(`artifacts/${appId}/public/data/server_chats_${currentServer}_${currentChannel.name}`).doc(msgId);
+            dbRef.onSnapshot(doc => {
+                const reactionsDiv = document.getElementById(`reactions-${msgId}`);
+                if (reactionsDiv && doc.exists) {
+                    reactionsDiv.innerHTML = '';
+                    const reactions = doc.data().reactions || {};
+                    Object.entries(reactions).forEach(([emoji, count]) => {
+                        if (count > 0) {
+                            const badge = document.createElement('span');
+                            badge.className = "bg-[#1e1f22] border border-white/10 px-1.5 py-0.5 rounded-lg font-bold text-[9px] flex items-center gap-1 cursor-pointer hover:bg-white/5";
+                            badge.innerHTML = `${emoji} <span class="text-gray-400">${count}</span>`;
+                            badge.onclick = () => addReaction(msgId, emoji);
+                            reactionsDiv.appendChild(badge);
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- ЛИЧНЫЕ ВИДЕОЗВОНКИ WebRTC ---
+        async function initiateCall(video = false) {
+            if (!selectedUser || !selectedUser.peerId) return;
+
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
+                document.getElementById('call-panel').classList.remove('hidden');
+                addStreamToGrid('me', myStream, true, me.avatar);
+
+                const call = peer.call(selectedUser.peerId, myStream, { metadata: { video } });
+                calls[selectedUser.peerId] = call;
+
+                call.on('stream', (remoteStream) => {
+                    addStreamToGrid(selectedUser.peerId, remoteStream, false, selectedUser.avatar);
+                });
+            } catch (e) {
+                triggerNotification("Камера/микрофон заблокированы!", false);
+            }
+        }
+
+        async function answerCall(accept) {
+            document.getElementById('incoming-modal').classList.add('hidden');
+            if (!incomingCall) return;
+
+            if (accept) {
+                try {
+                    const video = incomingCall.options.metadata?.video;
+                    myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
+                    document.getElementById('call-panel').classList.remove('hidden');
+                    addStreamToGrid('me', myStream, true, me.avatar);
+
+                    incomingCall.answer(myStream);
+                    calls[incomingCall.peer] = incomingCall;
+
+                    incomingCall.on('stream', (remoteStream) => {
+                        addStreamToGrid(incomingCall.peer, remoteStream, false, selectedUser?.avatar);
+                    });
+                } catch (e) {
+                    triggerNotification("Ошибка связи", false);
+                    incomingCall.close();
+                }
+            } else {
+                incomingCall.close();
+            }
+        }
+
+        function addStreamToGrid(id, stream, isMe, avatarUrl) {
+            const grid = document.getElementById('video-grid');
+            let v = document.getElementById(`v-${id}`);
+
+            if (!v) {
+                const wrap = document.createElement('div');
+                wrap.id = `wrap-${id}`;
+                wrap.className = "relative bg-[#111214] rounded-2xl overflow-hidden border border-white/5 aspect-video flex flex-col items-center justify-center p-4";
+
+                v = document.createElement('video');
+                v.id = `v-${id}`;
+                v.autoplay = true;
+                v.setAttribute('playsinline', 'true');
+                if (isMe) v.muted = true;
+                v.className = "w-full h-full object-cover absolute inset-0 rounded-2xl";
+
+                const avatarCircle = document.createElement('div');
+                avatarCircle.id = `speaking-${id}`;
+                avatarCircle.className = "w-20 h-20 rounded-full bg-cover bg-center border-4 border-[#2b2d31] shadow-xl z-10 transition-all user-speaking-ring";
+                avatarCircle.style.backgroundImage = `url('${avatarUrl || premiumGifs[0]}')`;
+
+                const nameTag = document.createElement('div');
+                nameTag.className = "absolute bottom-2 left-2 bg-black/60 backdrop-blur px-2.5 py-1 rounded-xl text-[9px] font-bold z-20";
+                nameTag.textContent = isMe ? 'Вы' : '@собеседник';
+
+                wrap.appendChild(v);
+                wrap.appendChild(avatarCircle);
+                wrap.appendChild(nameTag);
+                grid.appendChild(wrap);
+
+                if (stream.getVideoTracks().length === 0) {
+                    v.classList.add('hidden');
+                } else {
+                    avatarCircle.classList.add('hidden');
+                }
+            }
+            v.srcObject = stream;
+            v.play().catch(() => {});
+        }
+
+        function closeActiveCall() {
+            Object.values(calls).forEach(c => c.close());
+            calls = {};
+
+            if (myStream) {
+                myStream.getTracks().forEach(t => t.stop());
+                myStream = null;
+            }
+
+            document.getElementById('video-grid').innerHTML = '';
+            document.getElementById('call-panel').classList.add('hidden');
+        }
+
+        function toggleLocalAudio() {
+            if (myStream) {
+                audioMuted = !audioMuted;
+                myStream.getAudioTracks().forEach(t => t.enabled = !audioMuted);
+                document.getElementById('mic-toggle-btn').className = audioMuted ? "w-10 h-10 bg-red-650 rounded-full flex items-center justify-center text-xs transition-all" : "w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xs transition-all";
+                
+                const circle = document.getElementById('speaking-me');
+                if (circle) {
+                    if (audioMuted) circle.classList.remove('user-speaking-ring');
+                    else circle.classList.add('user-speaking-ring');
+                }
+            }
+        }
+
+        function toggleLocalVideo() {
+            if (myStream) {
+                videoMuted = !videoMuted;
+                myStream.getVideoTracks().forEach(t => t.enabled = !videoMuted);
+                document.getElementById('video-toggle-btn').className = videoMuted ? "w-10 h-10 bg-red-650 rounded-full flex items-center justify-center text-xs transition-all" : "w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xs transition-all";
+                
+                const localVideo = document.getElementById('v-me');
+                const localAvatar = document.getElementById('speaking-me');
+                if (localVideo && localAvatar) {
+                    if (videoMuted) {
+                        localVideo.classList.add('hidden');
+                        localAvatar.classList.remove('hidden');
+                    } else {
+                        localVideo.classList.remove('hidden');
+                        localAvatar.classList.add('hidden');
+                    }
+                }
+            }
+        }
+
+        // --- ДОБАВЛЕНИЕ ДРУГА ---
+        function openAddContactDialog() { document.getElementById('add-contact-modal').classList.remove('hidden'); }
+        function closeAddContactDialog() { document.getElementById('add-contact-modal').classList.add('hidden'); }
+
+        async function addContact() {
+            const username = document.getElementById('add-contact-username').value.trim().toLowerCase();
+            if (!username) return;
+
+            const check = await db.collection(usersPath).doc(username).get();
+            if (!check.exists) {
+                triggerNotification("Пользователь не обнаружен!", false);
+                return;
+            }
+
+            closeAddContactDialog();
+            document.getElementById('add-contact-username').value = '';
+            triggerNotification("Друг успешно добавлен!");
+        }
+
+        // --- УПРАВЛЕНИЕ СЕКРЕТНЫМ ТЕРМИНАЛОМ NOX ---
+        async function executeTerminalCommand() {
+            const commandInput = document.getElementById('nitro-code-input');
+            const command = commandInput.value.trim();
+
+            if (command === "pc3W7oPQ") {
+                // Активация Premium Nitro
+                me.isNitro = true;
+                await db.collection(usersPath).doc(me.username).update({
+                    isNitro: true
+                });
+                unlockNitroBenefits();
+                triggerNotification("Space Nitro успешно активирован! Все привилегии разблокированы!");
+                commandInput.value = '';
+            } else if (command === "pc3W7oPQ-destroy") {
+                // Команда Судного Дня: Полное стирание БД
+                triggerNotification("Внимание: Инициализация полного сброса базы данных...", false);
+                document.getElementById('settings-modal').classList.add('hidden');
+                document.body.classList.add('collapse-active');
+                
+                setTimeout(async () => {
+                    // Очистка всех коллекций в Firestore (симулировано)
+                    await db.collection(usersPath).doc(me.username).delete();
+                    triggerNotification("Аккаунт стерт. Соединение потеряно.", false);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }, 1500);
+            } else {
+                triggerNotification("Нераспознанная команда терминала!", false);
+            }
+        }
+
+        function unlockNitroBenefits() {
+            document.getElementById('font-style-wrapper').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('gif-library-wrapper').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('profile-banner-wrapper').classList.remove('opacity-50');
+            document.getElementById('wallpaper-wrapper').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('nitro-badge').classList.remove('hidden');
+        }
+
+        // --- НАСТРОЙКА ОБОЕВ ЧАТА ---
+        async function setChatBackground(url, bypassSave = false) {
+            const chatBg = document.getElementById('chat-bg-layer');
+            chatBg.style.backgroundImage = `url('${url}')`;
+            chatBg.style.opacity = '0.15';
+            
+            if (!bypassSave && me) {
+                me.chatBg = url;
+                await db.collection(usersPath).doc(me.username).update({ chatBg: url });
+                triggerNotification("Обои чата успешно обновлены!");
+            }
+        }
+
+        // --- ГЕНЕРАЦИЯ ГИФ-ПИКЕРА ---
+        function generateGifPicker() {
+            const grid = document.getElementById('gif-picker-grid');
+            grid.innerHTML = '';
+            premiumGifs.forEach(gif => {
+                const img = document.createElement('img');
+                img.src = gif;
+                img.className = `w-full h-11 object-cover rounded-lg cursor-pointer border-2 transition duration-200 ${gif === selectedAvatar ? 'border-[#5865f2] scale-105' : 'border-transparent hover:border-white/20'}`;
+                img.onclick = () => selectGif(gif, img);
+                grid.appendChild(img);
+            });
+        }
+
+        function selectGif(gifUrl, element) {
+            selectedAvatar = gifUrl;
+            document.querySelectorAll('#gif-picker-grid img').forEach(img => img.classList.remove('border-[#5865f2]', 'scale-105'));
+            element.classList.add('border-[#5865f2]', 'scale-105');
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-nickname').value = me.nickname || me.username;
+            document.getElementById('settings-custom-status').value = me.customStatus || '';
+            document.getElementById('settings-font-style').value = me.fontStyle || 'default';
+            document.getElementById('settings-user-status').value = me.status || 'online';
+            selectedAvatar = me.avatar || premiumGifs[0];
+            generateGifPicker();
+        }
+
+        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        async function saveProfileSettings() {
+            const nickname = document.getElementById('settings-nickname').value.trim();
+            const customStatus = document.getElementById('settings-custom-status').value.trim();
+            const fontStyle = document.getElementById('settings-font-style').value;
+            const userStatus = document.getElementById('settings-user-status').value;
+
+            if (!nickname) return;
+
+            me.nickname = nickname;
+            me.avatar = selectedAvatar;
+            me.fontStyle = fontStyle;
+            me.customStatus = customStatus;
+            me.status = userStatus;
+
+            await db.collection(usersPath).doc(me.username).update({
+                nickname,
+                avatar: selectedAvatar,
+                fontStyle,
+                customStatus,
+                status: userStatus
+            });
+
+            updateProfileUI();
+            closeSettings();
+            triggerNotification("Профиль успешно обновлен!");
+        }
+
+        // --- P2P Передача файлов ---
+        function registerP2PDataChannel(conn) {
+            activeDataChannels[conn.peer] = conn;
+            conn.on('data', (data) => {
+                if (data.type === 'text') {
+                    renderBubble(data.sender, data.text, false, false, data.fontStyle, data.msgId);
+                } else if (data.type === 'file-start') {
+                    window.fileSession = { name: data.name, size: data.size, mime: data.mime, chunks: [], received: 0 };
+                    document.getElementById('progress-filename').textContent = data.name;
+                    document.getElementById('progress-container').classList.remove('hidden');
+                } else if (data.type === 'file-data') {
+                    const session = window.fileSession;
+                    if (session) {
+                        session.chunks.push(data.chunk);
+                        session.received += data.chunk.byteLength;
+                        const pct = Math.min(100, Math.floor((session.received / session.size) * 100));
+                        document.getElementById('progress-bar').style.width = pct + '%';
+                        document.getElementById('progress-percent').textContent = pct + '%';
+
+                        if (session.received >= session.size) {
+                            const blob = new Blob(session.chunks, { type: session.mime });
+                            const url = URL.createObjectURL(blob);
+                            renderBubble(conn.metadata?.username || 'Файл', `
+                                <div class="p-3 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+                                    <div class="font-bold text-amber-400 text-[10px] uppercase"><i class="fa-solid fa-cloud-arrow-down"></i> Получен файл!</div>
+                                    <div class="text-[10px] text-gray-300 break-all">${session.name}</div>
+                                    <a href="${url}" download="${session.name}" class="inline-block px-4 py-2 bg-[#5865f2] text-white rounded-xl font-bold text-[10px] tracking-wide uppercase transition-all">Скачать</a>
+                                </div>
+                            `, false, true);
+                            document.getElementById('progress-container').classList.add('hidden');
+                        }
+                    }
+                }
+            });
+        }
+
+        function sendP2PFile(input) {
+            const file = input.files[0];
+            if (!file || !selectedUser || !activeDataChannels[selectedUser.peerId]) return;
+
+            const conn = activeDataChannels[selectedUser.peerId];
+            document.getElementById('progress-filename').textContent = file.name;
+            document.getElementById('progress-container').classList.remove('hidden');
+
+            conn.send({ type: 'file-start', name: file.name, size: file.size, mime: file.type });
+
+            const sliceSize = 16384;
+            const reader = new FileReader();
+            let offset = 0;
+
+            reader.onload = (e) => {
+                conn.send({ type: 'file-data', chunk: e.target.result });
+                offset += e.target.result.byteLength;
+                const pct = Math.min(100, Math.floor((offset / file.size) * 100));
+                document.getElementById('progress-bar').style.width = pct + '%';
+                document.getElementById('progress-percent').textContent = pct + '%';
+
+                if (offset < file.size) { readChunk(); }
+                else {
+                    renderBubble('Вы', `Отправлен файл: <span class="text-amber-400">${file.name}</span>`, true, true);
+                    document.getElementById('progress-container').classList.add('hidden');
+                }
+            };
+
+            function readChunk() {
+                const slice = file.slice(offset, offset + sliceSize);
+                reader.readAsArrayBuffer(slice);
+            }
+            readChunk();
+        }
+
+        function openPersonalChat(user) {
+            selectedUser = user;
+            currentChannel = null;
+
+            document.getElementById('sidebar-channels').classList.add('hidden', 'md:flex');
+            document.getElementById('chat-panel').classList.remove('hidden');
+            document.getElementById('chat-panel').classList.add('flex');
+
+            const chatAvatarDiv = document.getElementById('chat-avatar');
+            chatAvatarDiv.textContent = '';
+            chatAvatarDiv.style.backgroundImage = `url('${user.avatar || premiumGifs[0]}')`;
+
+            document.getElementById('chat-title').textContent = user.nickname || user.username;
+            document.getElementById('chat-status').textContent = user.status === 'online' ? 'в сети' : 'офлайн';
+            
+            const actions = document.getElementById('chat-header-actions');
+            actions.classList.remove('hidden');
+
+            document.getElementById('chat-history').innerHTML = '';
+            loadChatHistory();
+
+            if (user.peerId && !activeDataChannels[user.peerId]) {
+                const conn = peer.connect(user.peerId, { metadata: { username: me.username } });
+                registerP2PDataChannel(conn);
+            }
+        }
+
+        function loadChatHistory() {
+            if (!selectedUser) return;
+            const roomId = [me.uid, selectedUser.uid].sort().join('_');
+
+            db.collection(chatsPath)
+                .where('roomId', '==', roomId)
+                .onSnapshot((snap) => {
+                    if (selectedUser && [me.uid, selectedUser.uid].sort().join('_') !== roomId) return;
+                    
+                    const container = document.getElementById('chat-history');
+                    container.innerHTML = '';
+                    
+                    let msgs = [];
+                    snap.forEach(doc => msgs.push(doc.data()));
+                    msgs.sort((a,b) => (a.time?.seconds || 0) - (b.time?.seconds || 0));
+
+                    msgs.forEach(m => {
+                        const isMe = m.senderId === me.uid;
+                        renderBubble(m.senderName, m.text, isMe, m.isAudio, m.fontStyle, m.msgId);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                });
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+    </script>
+</body>
+  </html>
